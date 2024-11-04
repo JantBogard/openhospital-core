@@ -49,7 +49,6 @@ import org.isf.generaldata.GeneralData;
 import org.isf.generaldata.MessageBundle;
 import org.isf.hospital.manager.HospitalBrowsingManager;
 import org.isf.hospital.model.Hospital;
-import org.isf.medicalinventory.model.InventoryStatus;
 import org.isf.medicalinventory.model.MedicalInventory;
 import org.isf.medicals.model.Medical;
 import org.isf.patient.model.Patient;
@@ -1101,14 +1100,9 @@ public class JasperReportsManager {
 
 	public JasperReportResultDto getInventoryReportPdf(MedicalInventory inventory, String jasperFileName, int printQtyReal) throws OHServiceException {
 		try {
-			Map<String, Object> parameters = new HashMap<>();
 			Hospital hosp = hospitalManager.getHospital();
-			String status = MessageBundle.getMessage(inventory.getStatus());
-			parameters.put("Hospital", hosp.getDescription());
-			parameters.put("Address", hosp.getAddress());
-			parameters.put("City", hosp.getCity());
-			parameters.put("Email", hosp.getEmail());
-			parameters.put("Telephone", hosp.getTelephone());
+			String status = inventory.getStatus();
+			Map<String, Object> parameters = new HashMap<>(getHospitalParameters());
 			parameters.put("inventoryId", String.valueOf(inventory.getId()));
 			parameters.put("inventoryReference", inventory.getInventoryReference());
 			parameters.put("inventoryStatus", status != null ? status : inventory.getStatus());

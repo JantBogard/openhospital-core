@@ -25,6 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import jakarta.transaction.Transactional;
+
 import org.isf.generaldata.MessageBundle;
 import org.isf.medicalinventory.model.MedicalInventoryRow;
 import org.isf.medicalinventory.service.MedicalInventoryRowIoOperation;
@@ -33,8 +35,6 @@ import org.isf.utils.exception.OHDataValidationException;
 import org.isf.utils.exception.OHServiceException;
 import org.isf.utils.exception.model.OHExceptionMessage;
 import org.springframework.stereotype.Component;
-
-import jakarta.transaction.Transactional;
 
 @Component
 public class MedicalInventoryRowManager {
@@ -109,9 +109,8 @@ public class MedicalInventoryRowManager {
 					if (invRowDelete.getLot() != null) {
 						movStockInsertingManager.deleteLot(invRowDelete.getLot());
 					}
-				} else {
-					this.deleteMedicalInventoryRow(invRowDelete);
 				}
+				ioOperation.deleteMedicalInventoryRow(invRow);
 			}	
 		}
 	}
@@ -123,21 +122,18 @@ public class MedicalInventoryRowManager {
 	 * @return the {@link MedicalInventoryRow} object.
 	 * @throws OHServiceException
 	 */
-	public MedicalInventoryRow getMedicalInventoryRowById(Integer invRowId) throws OHServiceException {
-		if (invRowId != null) {
-			Optional<MedicalInventoryRow> medInvRow = ioOperation.getMedicalInventoryRowById(invRowId);
-			if (medInvRow.isPresent()) {
-				return medInvRow.get();
-			}
+	public MedicalInventoryRow getMedicalInventoryRowById(int invRowId) throws OHServiceException {
+		Optional<MedicalInventoryRow> medInvRow = ioOperation.getMedicalInventoryRowById(invRowId);
+		if (medInvRow.isPresent()) {
+			return medInvRow.get();
 		}
-		
 		return null;
 	}
 	
 	/**
 	 * Verify if the object is valid for CRUD and return a list of errors, if any.
 	 *
-	 * @param medInventoryRow
+	 * @param medicalInventoryRow
 	 * @throws OHDataValidationException
 	 */
 	private void validateMedicalInventoryRow(MedicalInventoryRow medicalInventoryRow) throws OHDataValidationException {
@@ -153,5 +149,17 @@ public class MedicalInventoryRowManager {
 		if (!errors.isEmpty()) {
 			throw new OHDataValidationException(errors);
 		}
+	}
+
+	/**
+	 * Return {@link MedicalInventoryRow} for passed param.
+	 *
+	 * @param medicalCode - the medical code.
+	 * @param lotCode - the lot code.
+	 * @return the {@link MedicalInventoryRow} object.
+	 * @throws OHServiceException
+	 */
+	public MedicalInventoryRow getMedicalInventoryRowByMedicalCodeAndLotCode(int medicalCode, String lotCode) throws OHServiceException {
+		return ioOperation.getMedicalInventoryRowByMedicalCodeAndLotCode(medicalCode, lotCode);
 	}
 }

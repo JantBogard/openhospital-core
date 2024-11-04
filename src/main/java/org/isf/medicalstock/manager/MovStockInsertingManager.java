@@ -32,6 +32,7 @@ import org.isf.medicals.model.Medical;
 import org.isf.medicals.service.MedicalsIoOperations;
 import org.isf.medicalstock.model.Lot;
 import org.isf.medicalstock.model.Movement;
+import org.isf.medicalstock.service.LotIoOperationRepository;
 import org.isf.medicalstock.service.MedicalStockIoOperations;
 import org.isf.utils.db.TranslateOHServiceException;
 import org.isf.utils.exception.OHDataValidationException;
@@ -48,9 +49,13 @@ public class MovStockInsertingManager {
 
 	private MedicalsIoOperations ioOperationsMedicals;
 
-	public MovStockInsertingManager(MedicalStockIoOperations medicalStockIoOperations, MedicalsIoOperations medicalsIoOperations) {
+	private LotIoOperationRepository ioOperationsLots;
+
+	public MovStockInsertingManager(MedicalStockIoOperations medicalStockIoOperations, MedicalsIoOperations medicalsIoOperations,
+		LotIoOperationRepository ioOperationsLots) {
 		this.ioOperations = medicalStockIoOperations;
 		this.ioOperationsMedicals = medicalsIoOperations;
+		this.ioOperationsLots = ioOperationsLots;
 	}
 
 	/**
@@ -150,7 +155,7 @@ public class MovStockInsertingManager {
 			 */
 			List<Integer> medicalIds = ioOperations.getMedicalsFromLot(lot.getCode());
 			if (movement.getMedical() != null && !(medicalIds.isEmpty() || medicalIds.size() == 1 && medicalIds.get(0).intValue() == movement
-							.getMedical().getCode().intValue())) {
+				.getMedical().getCode().intValue())) {
 				errors.add(new OHExceptionMessage(MessageBundle.getMessage("angal.medicalstock.thislotreferstoanothermedical.msg")));
 			}
 
@@ -210,6 +215,17 @@ public class MovStockInsertingManager {
 	}
 
 	/**
+	 * Checks if the specified {@link Lot} exists.
+	 * 
+	 * @param lotCode the lot code.
+	 * @return {@code true} if exists, {@code false} otherwise.
+	 * @throws OHServiceException if an error occurs during the check.
+	 */
+	public boolean lotExists(String lotCode) throws OHServiceException {
+		return ioOperationsLots.findById(String.valueOf(lotCode)).orElse(null) != null;
+	}
+
+	/**
 	 * Verify if the referenceNumber is valid for CRUD and return a list of errors, if any
 	 *
 	 * @param referenceNumber - the lot to validate
@@ -235,7 +251,7 @@ public class MovStockInsertingManager {
 	private boolean isAutomaticLotOut() {
 		return GeneralData.AUTOMATICLOT_OUT;
 	}
-	
+
 	/**
 	 * Retrieves all the {@link Lot} associated to the specified {@link Medical}, expiring first on top, zero quantities will be stripped out.
 	 * 
@@ -248,10 +264,11 @@ public class MovStockInsertingManager {
 	}
 
 	/**
-	 * Retrieves all the {@link Lot} associated to the specified {@link Medical}, expiring first on top, zero quantities will be stripped out if {@code removeEmtpy} is set to true.
+	 * Retrieves all the {@link Lot} associated to the specified {@link Medical}, expiring first on top, zero quantities will be stripped out if
+	 * {@code removeEmtpy} is set to true.
 	 *
 	 * @param medical the medical.
-	 * @param removeEmpty.
+	 * @param removeEmpty
 	 * @return the list of retrieved {@link Lot}s.
 	 * @throws OHServiceException
 	 */
@@ -301,8 +318,7 @@ public class MovStockInsertingManager {
 	 * Insert a list of charging {@link Movement}s and related {@link Lot}s
 	 *
 	 * @param movements - the list of {@link Movement}s
-	 * @param referenceNumber - the reference number to be set for all movements
-	 * if {@link null}, each movements must have a different referenceNumber
+	 * @param referenceNumber - the reference number to be set for all movements if {@link null}, each movements must have a different referenceNumber
 	 * @return a list of inserted {@link Movement}s.
 	 * @throws OHServiceException
 	 */
@@ -326,8 +342,8 @@ public class MovStockInsertingManager {
 			} catch (OHServiceException e) {
 				List<OHExceptionMessage> errors = e.getMessages();
 				errors.add(new OHExceptionMessage(
-								mov.getMedical() != null ? mov.getMedical().getDescription()
-												: MessageBundle.getMessage("angal.medicalstock.nodescription.txt")));
+					mov.getMedical() != null ? mov.getMedical().getDescription()
+						: MessageBundle.getMessage("angal.medicalstock.nodescription.txt")));
 				throw new OHDataValidationException(errors);
 			}
 		}
@@ -350,6 +366,7 @@ public class MovStockInsertingManager {
 
 	/**
 	 * Retrieves the {@link Lot}.
+	 * 
 	 * @param lotCode - the lot code.
 	 * @return the retrieved {@link Lot}.
 	 * @throws OHServiceException if an error occurs during the check.
@@ -357,9 +374,27 @@ public class MovStockInsertingManager {
 	public Lot getLot(String lotCode) throws OHServiceException {
 		return ioOperations.getLot(lotCode);
 	}
-	
+
+	/**
+	 * Update the list of {@link Lot}s.
+	 * 
+	 * @param lots - the list of lots.
+	 * @return the list of {@link Lot}s updated.
+	 * @throws OHServiceException if an error occurs during the check.
+	 */
+	@Transactional
+	public List<Lot> updateLot(List<Lot> lots) throws OHServiceException {
+		List<Lot> updatedLots = new ArrayList<>();
+		for (Lot lot : lots) {
+			Lot updatedLot = updateLot(lot);
+			updatedLots.add(updatedLot);
+		}
+		return updatedLots;
+	}
+
 	/**
 	 * Update the {@link Lot}.
+	 * 
 	 * @param lot - the lot.
 	 * @return the {@link Lot} updated.
 	 * @throws OHServiceException if an error occurs during the check.
@@ -372,8 +407,7 @@ public class MovStockInsertingManager {
 	 * Insert a list of discharging {@link Movement}s
 	 *
 	 * @param movements - the list of {@link Movement}s
-	 * @param referenceNumber - the reference number to be set for all movements
-	 * if {@link null}, each movements must have a different referenceNumber
+	 * @param referenceNumber - the reference number to be set for all movements if {@link null}, each movements must have a different referenceNumber
 	 * @return a list of {@Link Movement}s.
 	 * @throws OHServiceException
 	 */
@@ -400,9 +434,10 @@ public class MovStockInsertingManager {
 		}
 		return dischargingMovements;
 	}
-	
+
 	/**
 	 * Stores the specified {@link Lot}.
+	 * 
 	 * @param lotCode the {@link Lot} code.
 	 * @param lot the lot to store.
 	 * @param medical
@@ -432,12 +467,23 @@ public class MovStockInsertingManager {
 	}
 
 	/**
-	 * Deletes the specified {@link lot}.
+	 * Deletes the specified {@link Lot}.
 	 *
 	 * @param lot the lot to delete.
 	 * @throws OHServiceException
 	 */
 	public void deleteLot(Lot lot) throws OHServiceException {
 		ioOperations.deleteLot(lot);
+	}
+
+	/**
+	 * Retrieves all medicals referencing the specified code.
+	 * 
+	 * @param code the lot code.
+	 * @return the ids of medicals referencing the specified lot.
+	 * @throws OHServiceException if an error occurs retrieving the referencing medicals.
+	 */
+	public List<Integer> getMedicalsFromLot(String code) throws OHServiceException {
+		return ioOperations.getMedicalsFromLot(code);
 	}
 }

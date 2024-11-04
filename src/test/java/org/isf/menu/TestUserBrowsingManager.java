@@ -31,11 +31,8 @@ import org.isf.generaldata.GeneralData;
 import org.isf.menu.manager.UserBrowsingManager;
 import org.isf.menu.model.User;
 import org.isf.menu.model.UserGroup;
-import org.isf.menu.service.GroupMenuIoOperationRepository;
-import org.isf.menu.service.MenuIoOperations;
 import org.isf.menu.service.UserGroupIoOperationRepository;
 import org.isf.menu.service.UserIoOperationRepository;
-import org.isf.menu.service.UserMenuItemIoOperationRepository;
 import org.isf.utils.exception.OHDataValidationException;
 import org.isf.utils.exception.OHException;
 import org.isf.utils.time.TimeTools;
@@ -48,28 +45,18 @@ class TestUserBrowsingManager extends OHCoreTestCase {
 
 	private static TestUser testUser;
 	private static TestUserGroup testUserGroup;
-	private static TestUserMenu testUserMenu;
-	private static TestGroupMenu testGroupMenu;
 
 	@Autowired
-	private MenuIoOperations menuIoOperation;
-	@Autowired
 	private UserBrowsingManager userBrowsingManager;
-	@Autowired
-	private GroupMenuIoOperationRepository groupMenuIoOperationRepository;
 	@Autowired
 	private UserGroupIoOperationRepository userGroupIoOperationRepository;
 	@Autowired
 	private UserIoOperationRepository userIoOperationRepository;
-	@Autowired
-	private UserMenuItemIoOperationRepository userMenuItemIoOperationRepository;
 
 	@BeforeAll
 	static void setUpClass() {
 		testUser = new TestUser();
 		testUserGroup = new TestUserGroup();
-		testUserMenu = new TestUserMenu();
-		testGroupMenu = new TestGroupMenu();
 	}
 
 	@BeforeEach
@@ -235,4 +222,3 @@ class TestUserBrowsingManager extends OHCoreTestCase {
 		return user.getUserName();
 	}
 }
-

@@ -1100,7 +1100,6 @@ public class JasperReportsManager {
 
 	public JasperReportResultDto getInventoryReportPdf(MedicalInventory inventory, String jasperFileName, int printQtyReal) throws OHServiceException {
 		try {
-			Hospital hosp = hospitalManager.getHospital();
 			String status = inventory.getStatus();
 			Map<String, Object> parameters = new HashMap<>(getHospitalParameters());
 			parameters.put("inventoryId", String.valueOf(inventory.getId()));
@@ -1114,7 +1113,7 @@ public class JasperReportsManager {
 			parameters.put("inventoryDate", formattedDate);
 
 			String pdfFilename = compilePDFFilename(RPT_BASE, jasperFileName, Arrays.asList(String.valueOf(inventory.getId())), "pdf ");
-			LOGGER.info("Generated PDF File: " + pdfFilename);
+			LOGGER.info("Generated PDF File: {}", pdfFilename);
 
 			JasperReportResultDto result = generateJasperReport(compileJasperFilename(RPT_BASE, jasperFileName), pdfFilename, parameters);
 			JasperExportManager.exportReportToPdfFile(result.getJasperPrint(), pdfFilename);

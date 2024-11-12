@@ -242,7 +242,7 @@ public class JasperReportsManager {
 	}
 
 	public JasperReportResultDto getGenericReportBillGroupedPdf(Integer billID, String jasperFileName, Patient patient, List<Integer> billListId,
-																String dateFrom, String dateTo, boolean show, boolean askForPrint) throws OHServiceException {
+					String dateFrom, String dateTo, boolean show, boolean askForPrint) throws OHServiceException {
 
 		try {
 			HashMap<String, Object> parameters = getHospitalParameters();
@@ -263,7 +263,7 @@ public class JasperReportsManager {
 	}
 
 	public JasperReportResultDto getGenericReportBillGroupedTxt(Integer billID, String jasperFileName, Patient patient, List<Integer> billListId,
-																String dateFrom, String dateTo, boolean show, boolean askForPrint) throws OHServiceException {
+					String dateFrom, String dateTo, boolean show, boolean askForPrint) throws OHServiceException {
 
 		try {
 			HashMap<String, Object> parameters = getHospitalParameters();
@@ -358,7 +358,7 @@ public class JasperReportsManager {
 			parameters.put("date", toDate(date)); // real param
 
 			String pdfFilename = compilePDFFilename(RPT_BASE, jasperFileName, Arrays.asList(String.valueOf(wardID), TimeTools.formatDateTime(date, YYYY_M_MDD)),
-				"pdf");
+							"pdf");
 
 			JasperReportResultDto result = generateJasperReport(compileJasperFilename(RPT_BASE, jasperFileName), pdfFilename, parameters);
 			JasperExportManager.exportReportToPdfFile(result.getJasperPrint(), pdfFilename);
@@ -373,7 +373,7 @@ public class JasperReportsManager {
 	}
 
 	public JasperReportResultDto getGenericReportPatientVersion2Pdf(Integer patientID, String parametersString, LocalDateTime dateFrom, LocalDateTime dateTo,
-																	String jasperFileName) throws OHServiceException {
+					String jasperFileName) throws OHServiceException {
 
 		try {
 
@@ -507,7 +507,7 @@ public class JasperReportsManager {
 	}
 
 	public void getGenericReportPharmaceuticalStockExcel(LocalDateTime date, String jasperFileName, String exportFilename, String filter, String groupBy,
-														 String sortBy) throws OHServiceException {
+					String sortBy) throws OHServiceException {
 
 		try {
 			if (date == null) {
@@ -548,7 +548,7 @@ public class JasperReportsManager {
 	}
 
 	public JasperReportResultDto getGenericReportPharmaceuticalStockPdf(LocalDateTime date, String jasperFileName, String filter, String groupBy, String sortBy)
-		throws OHServiceException {
+					throws OHServiceException {
 
 		try {
 			HashMap<String, Object> parameters = getHospitalParameters();
@@ -588,7 +588,7 @@ public class JasperReportsManager {
 	}
 
 	public JasperReportResultDto getGenericReportPharmaceuticalStockCardPdf(String jasperFileName, String exportFileName, LocalDateTime dateFrom,
-																			LocalDateTime dateTo, Medical medical, Ward ward) throws OHServiceException {
+					LocalDateTime dateTo, Medical medical, Ward ward) throws OHServiceException {
 
 		try {
 			if (dateFrom == null) {
@@ -623,7 +623,7 @@ public class JasperReportsManager {
 	}
 
 	public void getGenericReportPharmaceuticalStockCardExcel(String jasperFileName, String exportFileName, LocalDateTime dateFrom, LocalDateTime dateTo,
-															 Medical medical, Ward ward) throws OHServiceException {
+					Medical medical, Ward ward) throws OHServiceException {
 
 		try {
 			if (dateFrom == null) {
@@ -758,7 +758,7 @@ public class JasperReportsManager {
 	}
 
 	public JasperReportResultDto getGenericReportFromDateToDatePdf(LocalDate fromDate, LocalDate toDate, String jasperFileFolder, String jasperFileName)
-		throws OHServiceException {
+					throws OHServiceException {
 
 		try {
 			HashMap<String, Object> parameters = compileGenericReportFromDateToDateParameters(fromDate, toDate);
@@ -777,7 +777,7 @@ public class JasperReportsManager {
 	}
 
 	public JasperReportResultDto getGenericReportFromDateToDatePdf(String fromDate, String toDate, String jasperFileFolder, String jasperFileName)
-		throws OHServiceException {
+					throws OHServiceException {
 
 		try {
 			HashMap<String, Object> parameters = compileGenericReportFromDateToDateParameters(fromDate, toDate);
@@ -796,7 +796,7 @@ public class JasperReportsManager {
 	}
 
 	public void getGenericReportFromDateToDateExcel(LocalDate fromDate, LocalDate toDate, String jasperFileFolder, String jasperFileName, String exportFilename)
-		throws OHServiceException {
+					throws OHServiceException {
 
 		try {
 			String filename = compileJasperFilename(jasperFileFolder, jasperFileName);
@@ -825,7 +825,7 @@ public class JasperReportsManager {
 	}
 
 	public void getGenericReportFromDateToDateExcel(String fromDate, String toDate, String jasperFileFolder, String jasperFileName, String exportFilename)
-		throws OHServiceException {
+					throws OHServiceException {
 
 		try {
 			File jasperFile = new File(compileJasperFilename(jasperFileFolder, jasperFileName));
@@ -870,7 +870,7 @@ public class JasperReportsManager {
 	}
 
 	public void getGenericReportMYExcel(Integer month, Integer year, String jasperFileFolder, String jasperFileName, String exportFilename)
-		throws OHServiceException {
+					throws OHServiceException {
 
 		try {
 			File jasperFile = new File(compileJasperFilename(jasperFileFolder, jasperFileName));
@@ -920,7 +920,7 @@ public class JasperReportsManager {
 	}
 
 	private Map<String, Object> compileGenericReportMYParameters(Integer month, Integer year, String jasperFileFolder, String jasperFileName)
-		throws OHServiceException {
+					throws OHServiceException {
 		HashMap<String, Object> parameters = getHospitalParameters();
 		addBundleParameter(jasperFileFolder, jasperFileName, parameters);
 
@@ -1039,7 +1039,7 @@ public class JasperReportsManager {
 	}
 
 	private JasperReportResultDto generateJasperReport(String jasperFilename, String filename, Map<String, Object> parameters)
-		throws JRException, SQLException {
+					throws JRException, SQLException {
 		File jasperFile = new File(jasperFilename);
 		final JasperReport jasperReport = (JasperReport) JRLoader.loadObject(jasperFile);
 		Connection connection = dataSource.getConnection();

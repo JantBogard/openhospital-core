@@ -1098,14 +1098,14 @@ public class JasperReportsManager {
 		return Optional.ofNullable(localDate).map(t -> Date.from(t.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant())).orElse(null);
 	}
 
-	public JasperReportResultDto getInventoryReportPdf(MedicalInventory inventory, String jasperFileName, int printQtyReal) throws OHServiceException {
+	public JasperReportResultDto getInventoryReportPdf(MedicalInventory inventory, String jasperFileName, int printRealQty) throws OHServiceException {
 		try {
 			String status = inventory.getStatus();
 			Map<String, Object> parameters = new HashMap<>(getHospitalParameters());
 			parameters.put("inventoryId", String.valueOf(inventory.getId()));
 			parameters.put("inventoryReference", inventory.getInventoryReference());
 			parameters.put("inventoryStatus", status != null ? status : inventory.getStatus());
-			parameters.put("printQtyReal", printQtyReal);
+			parameters.put("printRealQty", printRealQty);
 
 			LocalDateTime inventoryDateTime = inventory.getInventoryDate();
 			DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DD_MM_YYYY);

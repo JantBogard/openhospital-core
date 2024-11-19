@@ -353,6 +353,20 @@ public class MedicalInventoryManager {
 	}
 
 	/**
+	 * Validate the Inventory rows of inventory ward.
+	 *
+	 * @param inventory - The {@link MedicalInventory}
+	 * @param inventoryRowSearchList - The list of {@link MedicalInventory}
+	 * @throws OHServiceException
+	 */
+	public void validateMedicalWardInventoryRow(MedicalInventory inventory, List<MedicalInventoryRow> inventoryRowSearchList) throws OHServiceException {
+		LocalDateTime movFrom = inventory.getLastModifiedDate();
+		LocalDateTime movTo = TimeTools.getNow();
+		StringBuilder medDescriptionForNewMedical = new StringBuilder("\n"); // initial new line
+		boolean medicalAdded = false;
+	}
+
+	/**
 	 * Marks an inventory as deleted by changing its status.
 	 * 
 	 * @param medicalInventory - the medicalInventory of the inventory to delete.

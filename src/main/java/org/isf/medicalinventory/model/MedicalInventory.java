@@ -86,6 +86,9 @@ public class MedicalInventory extends Auditable<String> {
 
 	@Column(name = "MINVT_DESTINATION")
 	private String destination;
+
+	@Column(name = "MINVT_DESC")
+	private String reason;
 	
 	@Version
 	@Column(name="MINVT_LOCK")
@@ -118,6 +121,19 @@ public class MedicalInventory extends Auditable<String> {
 		this.dischargeType = dischargeType;
 		this.supplier = supplier;
 		this.destination = destination;
+	}
+
+	public MedicalInventory(Integer id, String status, LocalDateTime inventoryDate, String user, String inventoryReference, String inventoryType, String ward,
+		String destination, String reason) {
+		this.id = id;
+		this.status = status;
+		this.inventoryDate = inventoryDate;
+		this.user = user;
+		this.inventoryReference = inventoryReference;
+		this.inventoryType = inventoryType;
+		this.ward = ward;
+		this.destination = destination;
+		this.reason = reason;
 	}
 
 	public Integer getId() {
@@ -222,5 +238,13 @@ public class MedicalInventory extends Auditable<String> {
 	
 	public void setDestination(String destination) {
 		this.destination = destination;
+	}
+
+	public String getReason() {
+		return reason;
+	}
+
+	public void setReason(String reason) {
+		this.reason = reason;
 	}
 }

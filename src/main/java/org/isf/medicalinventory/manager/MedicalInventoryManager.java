@@ -23,8 +23,10 @@ package org.isf.medicalinventory.manager;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.isf.generaldata.GeneralData;
@@ -37,6 +39,9 @@ import org.isf.medicalstock.manager.MovBrowserManager;
 import org.isf.medicalstock.manager.MovStockInsertingManager;
 import org.isf.medicalstock.model.Lot;
 import org.isf.medicalstock.model.Movement;
+import org.isf.medicalstockward.manager.MovWardBrowserManager;
+import org.isf.medicalstockward.model.MedicalWard;
+import org.isf.medicalstockward.model.MovementWard;
 import org.isf.utils.exception.OHDataValidationException;
 import org.isf.utils.exception.OHServiceException;
 import org.isf.utils.exception.model.OHExceptionMessage;
@@ -58,13 +63,16 @@ public class MedicalInventoryManager {
 
 	private MovBrowserManager movBrowserManager;
 
+	private MovWardBrowserManager movWardBrowserManager;
+
 	public MedicalInventoryManager(MedicalInventoryIoOperation medicalInventoryIoOperation, MedicalInventoryRowManager medicalInventoryRowManager,
 					MovStockInsertingManager movStockInsertingManager,
-					MovBrowserManager movBrowserManager) {
+					MovBrowserManager movBrowserManager, MovWardBrowserManager movWardBrowserManager) {
 		this.ioOperations = medicalInventoryIoOperation;
 		this.medicalInventoryRowManager = medicalInventoryRowManager;
 		this.movStockInsertingManager = movStockInsertingManager;
 		this.movBrowserManager = movBrowserManager;
+		this.movWardBrowserManager = movWardBrowserManager;
 	}
 
 	/**
@@ -362,8 +370,101 @@ public class MedicalInventoryManager {
 	public void validateMedicalWardInventoryRow(MedicalInventory inventory, List<MedicalInventoryRow> inventoryRowSearchList) throws OHServiceException {
 		LocalDateTime movFrom = inventory.getLastModifiedDate();
 		LocalDateTime movTo = TimeTools.getNow();
+		StringBuilder medDescriptionForLotUpdated = new StringBuilder("\n"); // initial new line
+		StringBuilder medDescriptionForNewLot = new StringBuilder("\n"); // initial new line
 		StringBuilder medDescriptionForNewMedical = new StringBuilder("\n"); // initial new line
+		boolean lotUpdated = false;
+		boolean lotAdded = false;
 		boolean medicalAdded = false;
+
+		List<MovementWard> movementWards = new ArrayList<>(movWardBrowserManager.getMovementWard(inventory.getWard(), movFrom, movTo));
+		List<Movement> movementToWards = new ArrayList<>(movBrowserManager.getMovements(inventory.getWard(), movFrom, movTo));
+		List<Medical> inventoryMedicalsList = inventoryRowSearchList.stream()
+			.map(MedicalInventoryRow::getMedical)
+			.distinct()
+			.toList();
+
+		// Get all the lot of the ward movements
+		List<Lot> lotOfMovements = new ArrayList<>(movementWards.stream().map(MovementWard::getLot).toList());
+		// Get all the lot of the movements
+		lotOfMovements.addAll(movementToWards.stream().map(Movement::getLot).toList());
+		// Remove duplicates by converting the list to a set
+		Set<Lot> uniqueLots = new HashSet<>(lotOfMovements);
+		// Convert the set back to a list
+		List<Lot> uniqueLotList = new ArrayList<>(uniqueLots);
+		// Cycle fetched movements to see if they impact inventoryRowSearchList
+		for (Lot lot : uniqueLotList) {
+			String lotCodeOfMovement = lot.getCode();
+			String lotExpiringDate = TimeTools.formatDateTime(lot.getDueDate(), TimeTools.DD_MM_YYYY);
+			String lotInfo = GeneralData.AUTOMATICLOT_IN ? lotExpiringDate : lotCodeOfMovement;
+			Medical medical = lot.getMedical();
+			String medicalDesc = medical.getDescription();
+			Integer medicalCode = medical.getCode();
+			double wardStoreQty = 0.0;
+
+			Optional<MedicalWard> optMedicalWard = movWardBrowserManager.getMedicalsWard(inventory.getWard(), medical.getCode(), false).stream()
+				.filter(m -> m.getLot().getCode().equals(lotCodeOfMovement)).findFirst();
+
+			if (optMedicalWard.isPresent()) {
+				wardStoreQty = optMedicalWard.get().getQty();
+			}
+
+			// Search for the specific Lot and Medical in inventoryRowSearchList (Lot should be enough)
+			Optional<MedicalInventoryRow> matchingRow = inventoryRowSearchList.stream()
+				.filter(row -> row.getLot().getCode().equals(lotCodeOfMovement) && row.getMedical().getCode().equals(medicalCode))
+				.findFirst();
+
+			if (matchingRow.isPresent()) {
+				MedicalInventoryRow medicalInventoryRow = matchingRow.get();
+				double theoQty = medicalInventoryRow.getTheoreticQty();
+				if (wardStoreQty != theoQty) {
+					lotUpdated = true;
+					medDescriptionForLotUpdated
+						.append("\n")
+						.append(MessageBundle.formatMessage(
+							"angal.inventory.theoreticalqtyhavebeenupdatedforsomemedical.detail.fmt.msg",
+							medicalDesc, lotInfo, theoQty, wardStoreQty, wardStoreQty - theoQty));
+				}
+			} else {
+				// TODO: to decide if to give control to the user about this
+				if (!inventoryMedicalsList.contains(medical)) {
+					// New medical
+					medicalAdded = true;
+					medDescriptionForNewMedical
+						.append("\n")
+						.append(MessageBundle.formatMessage(
+							"angal.inventory.newmedicalshavebeenfound.detail.fmt.msg",
+							medicalDesc, lotInfo, wardStoreQty));
+				} else {
+					// New Lot
+					lotAdded = true;
+					medDescriptionForNewLot
+						.append("\n")
+						.append(MessageBundle.formatMessage(
+							"angal.inventory.newlotshavebeenaddedforsomemedical.detail.fmt.msg",
+							medicalDesc, lotInfo, wardStoreQty));
+				}
+			}
+		}
+		List<OHExceptionMessage> errors = new ArrayList<>();
+		if (lotUpdated) {
+			errors.add(new OHExceptionMessage(MessageBundle.getMessage("angal.inventory.validate.btn"),
+				MessageBundle.formatMessage("angal.inventory.theoreticalqtyhavebeenupdatedforsomemedicalward.fmt.msg", medDescriptionForLotUpdated),
+				OHSeverityLevel.INFO));
+		}
+		if (lotAdded) {
+			errors.add(new OHExceptionMessage(MessageBundle.getMessage("angal.inventory.validate.btn"),
+				MessageBundle.formatMessage("angal.inventory.newlotshavebeenaddedforsomemedicalward.fmt.msg", medDescriptionForNewLot),
+				OHSeverityLevel.INFO));
+		}
+		if (medicalAdded) {
+			errors.add(new OHExceptionMessage(MessageBundle.getMessage("angal.inventory.validate.btn"),
+				MessageBundle.formatMessage("angal.inventory.newmedicalshavebeenfoundward.fmt.msg", medDescriptionForNewMedical),
+				OHSeverityLevel.INFO));
+		}
+		if (!errors.isEmpty()) {
+			throw new OHDataValidationException(errors);
+		}
 	}
 
 	/**

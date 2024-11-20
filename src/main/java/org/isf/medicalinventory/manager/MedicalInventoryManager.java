@@ -77,11 +77,9 @@ public class MedicalInventoryManager {
 
 	private MovWardBrowserManager movWardBrowserManager;
 
-	public MedicalInventoryManager(MedicalInventoryIoOperation medicalInventoryIoOperation,
-			MedicalInventoryRowManager medicalInventoryRowManager,
+	public MedicalInventoryManager(MedicalInventoryIoOperation medicalInventoryIoOperation, MedicalInventoryRowManager medicalInventoryRowManager,
 			MedicalDsrStockMovementTypeBrowserManager medicalDsrStockMovementTypeBrowserManager,
-			SupplierBrowserManager supplierManager, MovStockInsertingManager movStockInsertingManager,
-			WardBrowserManager wardManager,
+			SupplierBrowserManager supplierManager, MovStockInsertingManager movStockInsertingManager, WardBrowserManager wardManager,
 			MovBrowserManager movBrowserManager, MovWardBrowserManager movWardBrowserManager) {
 		this.ioOperations = medicalInventoryIoOperation;
 		this.medicalInventoryRowManager = medicalInventoryRowManager;

@@ -865,7 +865,6 @@ class Tests extends OHCoreTestCase {
 		dischargeType = medicalDsrStockMovementTypeIoOperationRepository.save(dischargeType);
 		destination = wardIoOperationRepository.save(destination);
 		MedicalInventory inventory = testMedicalWardInventory.setup(ward, false);
-		inventory.setDestination(destination.getCode());
 		inventory = medicalInventoryIoOperation.newMedicalInventory(inventory);
 		MedicalType medicalType = testMedicalType.setup(false);
 		Medical medical = testMedical.setup(medicalType, false);

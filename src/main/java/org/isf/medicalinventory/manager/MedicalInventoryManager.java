@@ -369,7 +369,7 @@ public class MedicalInventoryManager {
 	 * @throws OHServiceException
 	 */
 	public void validateMedicalWardInventoryRow(MedicalInventory inventory, List<MedicalInventoryRow> inventoryRowSearchList) throws OHServiceException {
-		LocalDateTime movFrom = inventory.getLastModifiedDate();
+		LocalDateTime movFrom = inventory.getInventoryDate();
 		LocalDateTime movTo = TimeTools.getNow();
 		StringBuilder medDescriptionForLotUpdated = new StringBuilder("\n"); // initial new line
 		StringBuilder medDescriptionForNewLot = new StringBuilder("\n"); // initial new line
@@ -614,6 +614,62 @@ public class MedicalInventoryManager {
 				double realQty = mainStoreQty;
 				MedicalInventoryRow newMedicalInventoryRow = new MedicalInventoryRow(null, mainStoreQty, realQty, inventory, medical,
 								lot);
+				medicalInventoryRowManager.newMedicalInventoryRow(newMedicalInventoryRow);
+			}
+		}
+		return this.updateMedicalInventory(inventory, true);
+	}
+
+	/**
+	 * Actualize the {@link MedicalInventory}'s ward.
+	 *
+	 * @param inventory - The {@link MedicalInventory}
+	 * @return {@link MedicalInventory}. It could be {@code null}.
+	 * @throws OHServiceException
+	 */
+	public MedicalInventory actualizeMedicalWardInventoryRow(MedicalInventory inventory) throws OHServiceException {
+		LocalDateTime movFrom = inventory.getInventoryDate();
+		LocalDateTime movTo = TimeTools.getNow();
+
+		List<MovementWard> movementWards = new ArrayList<>(movWardBrowserManager.getMovementWard(inventory.getWard(), movFrom, movTo));
+		List<Movement> movementToWards = new ArrayList<>(movBrowserManager.getMovements(inventory.getWard(), movFrom, movTo));
+		List<MedicalInventoryRow> inventoryRowList = medicalInventoryRowManager.getMedicalInventoryRowByInventoryId(inventory.getId());
+
+		// Get all the lot of the ward movements
+		List<Lot> lotOfMovements = new ArrayList<>(movementWards.stream().map(MovementWard::getLot).toList());
+		// Get all the lot of the movements
+		lotOfMovements.addAll(movementToWards.stream().map(Movement::getLot).toList());
+		// Remove duplicates by converting the list to a set
+		Set<Lot> uniqueLots = new HashSet<>(lotOfMovements);
+		// Convert the set back to a list
+		List<Lot> uniqueLotList = new ArrayList<>(uniqueLots);
+		// Cycle fetched movements to see if they impact inventoryRowSearchList
+		for (Lot lot : uniqueLotList) {
+			String lotCodeOfMovement = lot.getCode();
+			Medical medical = lot.getMedical();
+			Integer medicalCode = medical.getCode();
+			// Fetch also empty lots because some movements may have discharged them completely
+			Optional<MedicalWard> optMedicalWard = movWardBrowserManager.getMedicalsWard(inventory.getWard(), medical.getCode(), false).stream()
+				.filter(m -> m.getLot().getCode().equals(lotCodeOfMovement)).findFirst();
+			double wardStoreQty = optMedicalWard.isPresent() ? optMedicalWard.get().getQty() : 0.0;
+
+			// Search for the specific Lot and Medical in inventoryRowSearchList (Lot should be enough)
+			Optional<MedicalInventoryRow> matchingRow = inventoryRowList.stream()
+				.filter(row -> row.getLot().getCode().equals(lotCodeOfMovement) && row.getMedical().getCode().equals(medicalCode))
+				.findFirst();
+
+			if (matchingRow.isPresent()) {
+				MedicalInventoryRow medicalInventoryRow = matchingRow.get();
+				double theoQty = medicalInventoryRow.getTheoreticQty();
+				if (wardStoreQty != theoQty) {
+					// Update Lot
+					medicalInventoryRow.setTheoreticQty(wardStoreQty);
+					medicalInventoryRowManager.updateMedicalInventoryRow(medicalInventoryRow);
+				}
+			} else {
+				// TODO: to decide if to give control to the user about this
+				double realQty = wardStoreQty;
+				MedicalInventoryRow newMedicalInventoryRow = new MedicalInventoryRow(null, wardStoreQty, realQty, inventory, medical, lot);
 				medicalInventoryRowManager.newMedicalInventoryRow(newMedicalInventoryRow);
 			}
 		}

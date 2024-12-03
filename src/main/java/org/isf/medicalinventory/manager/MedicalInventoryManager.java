@@ -369,8 +369,8 @@ public class MedicalInventoryManager {
 	/**
 	 * Validate the Inventory rows of inventory ward.
 	 *
-	 * @param inventory - The {@link MedicalInventory}
-	 * @param inventoryRowSearchList - The list of {@link MedicalInventory}
+	 * @param inventory the {@link MedicalInventory}
+	 * @param inventoryRowSearchList the list of {@link MedicalInventory}
 	 * @throws OHServiceException
 	 */
 	public void validateMedicalWardInventoryRow(MedicalInventory inventory, List<MedicalInventoryRow> inventoryRowSearchList) throws OHServiceException {
@@ -671,7 +671,7 @@ public class MedicalInventoryManager {
 	/**
 	 * Actualize the {@link MedicalInventory}'s ward.
 	 *
-	 * @param inventory - The {@link MedicalInventory}
+	 * @param inventory the {@link MedicalInventory}
 	 * @return {@link MedicalInventory}. It could be {@code null}.
 	 * @throws OHServiceException
 	 */

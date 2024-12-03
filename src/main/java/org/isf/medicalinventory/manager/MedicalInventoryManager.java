@@ -369,7 +369,7 @@ public class MedicalInventoryManager {
 	 * @throws OHServiceException
 	 */
 	public void validateMedicalWardInventoryRow(MedicalInventory inventory, List<MedicalInventoryRow> inventoryRowSearchList) throws OHServiceException {
-		LocalDateTime movFrom = inventory.getInventoryDate();
+		LocalDateTime movFrom = inventory.getLastModifiedDate();
 		LocalDateTime movTo = TimeTools.getNow();
 		StringBuilder medDescriptionForLotUpdated = new StringBuilder("\n"); // initial new line
 		StringBuilder medDescriptionForNewLot = new StringBuilder("\n"); // initial new line

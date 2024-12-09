@@ -389,7 +389,7 @@ public class MedicalInventoryManager {
 
 		// Get all the lots from ward movements
 		List<Lot> lotOfMovements = new ArrayList<>(movementWards.stream().map(MovementWard::getLot).toList());
-		// Get all the lot of the movements
+		// Get all the lots from main store movements
 		lotOfMovements.addAll(movementToWards.stream().map(Movement::getLot).toList());
 		// Remove duplicates by converting the list to a set
 		Set<Lot> uniqueLots = new HashSet<>(lotOfMovements);

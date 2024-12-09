@@ -374,7 +374,7 @@ public class MedicalInventoryManager {
 	 * @throws OHServiceException
 	 */
 	public void validateMedicalWardInventoryRow(MedicalInventory inventory, List<MedicalInventoryRow> inventoryRowSearchList) throws OHServiceException {
-		LocalDateTime movFrom = inventory.getLastModifiedDate();
+		LocalDateTime movFrom = inventory.getInventoryDate();
 		LocalDateTime movTo = TimeTools.getNow();
 		StringBuilder medDescriptionForLotUpdated = new StringBuilder("\n"); // initial new line
 		StringBuilder medDescriptionForNewLot = new StringBuilder("\n"); // initial new line
@@ -397,24 +397,20 @@ public class MedicalInventoryManager {
 		List<Lot> uniqueLotList = new ArrayList<>(uniqueLots);
 		// Cycle fetched movements to see if they impact inventoryRowSearchList
 		for (Lot lot : uniqueLotList) {
-			String lotCodeOfMovement = lot.getCode();
+			String lotCode = lot.getCode();
 			String lotExpiringDate = TimeTools.formatDateTime(lot.getDueDate(), TimeTools.DD_MM_YYYY);
-			String lotInfo = GeneralData.AUTOMATICLOT_IN ? lotExpiringDate : lotCodeOfMovement;
+			String lotInfo = GeneralData.AUTOMATICLOT_IN ? lotExpiringDate : lotCode;
 			Medical medical = lot.getMedical();
 			String medicalDesc = medical.getDescription();
-			Integer medicalCode = medical.getCode();
-			double wardStoreQty = 0.0;
 
 			Optional<MedicalWard> optMedicalWard = movWardBrowserManager.getMedicalsWard(inventory.getWard(), medical.getCode(), false).stream()
-					.filter(m -> m.getLot().getCode().equals(lotCodeOfMovement)).findFirst();
+					.filter(m -> m.getLot().getCode().equals(lotCode)).findFirst();
 
-			if (optMedicalWard.isPresent()) {
-				wardStoreQty = optMedicalWard.get().getQty();
-			}
+			double wardStoreQty = optMedicalWard.isPresent() ? optMedicalWard.get().getQty() : 0.0;
 
-			// Search for the specific Lot and Medical in inventoryRowSearchList (Lot should be enough)
+			// Search for the specific Lot and Medical in inventoryRowSearchList
 			Optional<MedicalInventoryRow> matchingRow = inventoryRowSearchList.stream()
-				.filter(row -> row.getLot().getCode().equals(lotCodeOfMovement) && row.getMedical().getCode().equals(medicalCode)).findFirst();
+				.filter(row -> row.getLot().getCode().equals(lotCode)).findFirst();
 
 			if (matchingRow.isPresent()) {
 				MedicalInventoryRow medicalInventoryRow = matchingRow.get();
@@ -693,17 +689,17 @@ public class MedicalInventoryManager {
 		List<Lot> uniqueLotList = new ArrayList<>(uniqueLots);
 		// Cycle fetched movements to see if they impact inventoryRowSearchList
 		for (Lot lot : uniqueLotList) {
-			String lotCodeOfMovement = lot.getCode();
+			String lotCode = lot.getCode();
 			Medical medical = lot.getMedical();
 			Integer medicalCode = medical.getCode();
 			// Fetch also empty lots because some movements may have discharged them completely
 			Optional<MedicalWard> optMedicalWard = movWardBrowserManager.getMedicalsWard(inventory.getWard(), medical.getCode(), false).stream()
-				.filter(m -> m.getLot().getCode().equals(lotCodeOfMovement)).findFirst();
+				.filter(m -> m.getLot().getCode().equals(lotCode)).findFirst();
 			double wardStoreQty = optMedicalWard.isPresent() ? optMedicalWard.get().getQty() : 0.0;
 
 			// Search for the specific Lot and Medical in inventoryRowSearchList (Lot should be enough)
 			Optional<MedicalInventoryRow> matchingRow = inventoryRowList.stream()
-				.filter(row -> row.getLot().getCode().equals(lotCodeOfMovement) && row.getMedical().getCode().equals(medicalCode))
+				.filter(row -> row.getLot().getCode().equals(lotCode) && row.getMedical().getCode().equals(medicalCode))
 				.findFirst();
 
 			if (matchingRow.isPresent()) {

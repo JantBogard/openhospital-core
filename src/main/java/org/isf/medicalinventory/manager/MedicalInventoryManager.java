@@ -387,7 +387,7 @@ public class MedicalInventoryManager {
 		List<Movement> movementToWards = new ArrayList<>(movBrowserManager.getMovements(inventory.getWard(), movFrom, movTo));
 		List<Medical> inventoryMedicalsList = inventoryRowSearchList.stream().map(MedicalInventoryRow::getMedical).distinct().toList();
 
-		// Get all the lot of the ward movements
+		// Get all the lots from ward movements
 		List<Lot> lotOfMovements = new ArrayList<>(movementWards.stream().map(MovementWard::getLot).toList());
 		// Get all the lot of the movements
 		lotOfMovements.addAll(movementToWards.stream().map(Movement::getLot).toList());

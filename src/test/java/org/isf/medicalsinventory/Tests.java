@@ -22,7 +22,7 @@
 package org.isf.medicalsinventory;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -833,7 +833,8 @@ class Tests extends OHCoreTestCase {
 
 	@Test
 	void testValidateMedicalWardInventoryRow() throws Exception {
-		assertThatThrownBy(() -> {
+		Throwable throwable = catchThrowable(() -> {
+			// Initialize data and create movements
 			Ward ward = testWard.setup(false);
 			wardIoOperationRepository.saveAndFlush(ward);
 			MovementType chargeType = new MovementType("inventory+", "Inventory+", "+", "non-operational");
@@ -867,6 +868,7 @@ class Tests extends OHCoreTestCase {
 			lotThree = lotIoOperationRepository.save(lotThree);
 			medicalStockIoOperation.newMovement(initialMovement);
 			medicalStockIoOperationRepository.saveAndFlush(initialMedicalStock);
+			// Create inventory and inventory rows
 			inventory = medicalInventoryIoOperation.newMedicalInventory(inventory);
 			MedicalInventoryRow medicalInventoryRowOne = testMedicalInventoryRow.setup(inventory, medical, lotOne, false);
 			medicalInventoryRowOne.setRealqty(60);
@@ -886,11 +888,15 @@ class Tests extends OHCoreTestCase {
 			List<MedicalInventoryRow> medicalInventoryRows = medicalInventoryRowManager.getMedicalInventoryRowByInventoryId(inventoryId);
 			assertThat(medicalInventoryRows).isNotEmpty();
 			assertThat(medicalInventoryRows).hasSize(3);
+
+			// test case 1: Create movement from the main to the ward to add quantity for existing lot in the ward
 			firstMovement.setQuantity(100);
 			firstMovement.setDate(LocalDateTime.now());
 			firstmedicalStock = testMedicalStock.setup(firstMovement);
 			medicalStockIoOperation.newMovement(firstMovement);
 			medicalStockIoOperationRepository.saveAndFlush(firstmedicalStock);
+
+			// test case 2: Create movement from the main to the ward to add new lot
 			Lot lotfour = testLot.setup(medical, false);
 			lotfour.setCode("LOT-004");
 			lotfour = lotIoOperationRepository.save(lotfour);
@@ -900,6 +906,8 @@ class Tests extends OHCoreTestCase {
 			MedicalStock secondMedicalStock = testMedicalStock.setup(secondMovement);
 			medicalStockIoOperation.newMovement(secondMovement);
 			medicalStockIoOperationRepository.saveAndFlush(secondMedicalStock);
+
+			// test case 3: Create movement from the main to the ward to add new medical
 			Medical secondMedical = testMedical.setup(medicalType,false);
 			secondMedical.setProdCode("TP2");
 			secondMedical.setDescription("test description");
@@ -917,7 +925,13 @@ class Tests extends OHCoreTestCase {
 			MedicalStock thirdMedicalStock = testMedicalStock.setup(thirdMovement);
 			medicalStockIoOperation.newMovement(thirdMovement);
 			medicalStockIoOperationRepository.saveAndFlush(thirdMedicalStock);
+
+			// test validate medical ward inventory row
 			medicalInventoryManager.validateMedicalWardInventoryRow(inventory, medicalInventoryRows);
-		}).isInstanceOf(OHDataValidationException.class);
+		});
+		// Test if exception is OHDataValidationException instance
+		assertThat(throwable).isInstanceOf(OHDataValidationException.class);
+		// Test if size of message list is equal to 3
+		assertThat(((OHDataValidationException) throwable).getMessages().size()).isEqualTo(3);
 	}
 }

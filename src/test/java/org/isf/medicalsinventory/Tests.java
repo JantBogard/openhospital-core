@@ -832,7 +832,7 @@ class Tests extends OHCoreTestCase {
 	}
 
 	@Test
-	void testValidateMedicalWardInventoryRow() throws Exception {
+	void testValidateMedicalWardInventoryRow() {
 		Throwable throwable = catchThrowable(() -> {
 			// Initialize data and create movements
 			Ward ward = testWard.setup(false);

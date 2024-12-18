@@ -708,6 +708,7 @@ public class MedicalInventoryManager {
 				if (wardStoreQty != theoQty) {
 					// Update Lot
 					medicalInventoryRow.setTheoreticQty(wardStoreQty);
+					medicalInventoryRow.setRealqty(wardStoreQty);
 					medicalInventoryRowManager.updateMedicalInventoryRow(medicalInventoryRow);
 				}
 			} else {
